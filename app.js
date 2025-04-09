@@ -1,10 +1,11 @@
-import express from 'express';
+import dotenv from 'dotenv';
+dotenv.config();
 
-console.log("App started");
+import express from 'express';
+import router from './routers/dashboardRouter.js';
 
 const app = express();
 
-import router from './routers/dashboardRouter.js';
 app.use(router);
 
 const PORT = 8080;
