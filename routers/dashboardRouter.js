@@ -5,8 +5,11 @@ import {
   getWeeklyContactedLeads,
   getWeeklyTopCallers,
   getWeeklyValueWon,
-  getYearlyValueWon
-} from '../util/closeService.js';
+  getYearlyValueWon,
+  getWeeklyEmailsSent,
+  getWeeklyTopEmailers
+} from '../util/closeService/data.js';
+import { groups } from '../util/closeService/groups.js';
 
 const router = Router();
 
@@ -22,12 +25,14 @@ router.get("/api/metrics", async (req, res) => {
 
 router.get("/api/dashboard-data", async (req, res) => {
   try {
-    const [weeklyCalls, weeklyContactedLeads, weeklyTopCallers, weeklyValueWon, yearlyValueWon] = await Promise.all([
+    const [weeklyCalls, weeklyContactedLeads, weeklyTopCallers, weeklyValueWon, yearlyValueWon, weeklyEmailsSent, weeklyTopEmailers] = await Promise.all([
       getWeeklyCalls(),
       getWeeklyContactedLeads(),
       getWeeklyTopCallers(),
       getWeeklyValueWon(),
-      getYearlyValueWon()
+      getYearlyValueWon(),
+      getWeeklyEmailsSent(),
+      getWeeklyTopEmailers()
     ]);
 
     res.send({
@@ -36,7 +41,9 @@ router.get("/api/dashboard-data", async (req, res) => {
         weeklyContactedLeads,
         weeklyTopCallers,
         weeklyValueWon,
-        yearlyValueWon
+        yearlyValueWon,
+        weeklyEmailsSent,
+        weeklyTopEmailers
       }
     });
   } catch (error) {
@@ -44,5 +51,9 @@ router.get("/api/dashboard-data", async (req, res) => {
     res.status(500).send({ error: "Failed to fetch dashboard data" });
   }
 });
+
+router.get("/api/groups", async (req, res) => {
+    res.send(groups);
+})
 
 export default router;

@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { getCloseAuth } from '../auth/closeAuth.js';
+import { getCloseAuth } from '../../auth/closeAuth.js';
 
 const BASE_URL = "https://api.close.com/api/v1/report/activity/";
 
@@ -66,6 +66,24 @@ export async function getWeeklyTopCallers() {
     return topThreeCallers;
 }
 
+export async function getWeeklyTopEmailers() {
+    const data = await fetchMetric({
+        relative_range: 'this-week',
+        type: 'comparison',
+        metrics: ["emails.sent.all.count"]
+    });
+
+    const topThreeEmailers = data.data
+        .sort((a, b) => b["emails.sent.all.count"] - a["emails.sent.all.count"])
+        .slice(0, 3)
+        .map(emailer => ({
+            name: data.lookup.user[emailer.user_id]?.display || "Unknown",
+            emails: emailer["emails.sent.all.count"]
+        }));
+
+    return topThreeEmailers;
+}
+
 export async function getWeeklyValueWon() {
     const data = await fetchMetric({
         relative_range: 'this-week',
@@ -82,4 +100,13 @@ export async function getYearlyValueWon() {
     });
 
     return data.aggregations.totals["opportunities.won.all.sum_annualized_value"];
+}
+
+export async function getWeeklyEmailsSent() {
+    const data = await fetchMetric({
+        relative_range: 'this-week',
+        metrics: ["emails.sent.all.count"]
+    });
+
+    return data.aggregations.totals["emails.sent.all.count"];
 }
