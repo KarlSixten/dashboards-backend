@@ -27,7 +27,7 @@ export async function getWeeklyCalls() {
         return weeklyCalls;
     } catch (error) {
         console.error("Failed to fetch from Close:", error.response?.status, error.response?.data || error.message);
-        res.status(500).json({ error: "Failed to fetch data from Close" });
+        res.status(500).send({ error: "Failed to fetch data from Close" });
     }
 }
 
@@ -44,7 +44,7 @@ export async function getWeeklyContactedLeads() {
         return weeklyContactedLeads;
     } catch (error) {
         console.error("Failed to fetch from Close:", error.response?.status, error.response?.data || error.message);
-        res.status(500).json({ error: "Failed to fetch data from Close" });
+        res.status(500).send({ error: "Failed to fetch data from Close" });
     }
 }
 
@@ -73,6 +73,41 @@ export async function getWeeklyTopCallers() {
         return topThreeCallers;
     } catch (error) {
         console.error("Failed to fetch from Close:", error.response?.status, error.response?.data || error.message);
-        throw new Error("Failed to fetch data from Close");
+        res.status(500).send({ error: "Failed to fetch data from Close" });
+    }
+}
+
+export async function getWeeklyValueWon() {
+    try {
+        const response = await axios.post(BASE_URL, {
+            relative_range: 'this-week',
+            type: 'overview',
+            metrics: ["opportunities.won.all.sum_annualized_value"]
+        }, getCloseAuth());
+
+        const weeklyAnnualizedValueWon = response.data.aggregations.totals["opportunities.won.all.sum_annualized_value"];
+        console.log(response.data);
+        return weeklyAnnualizedValueWon;
+
+    } catch (error) {
+        console.error("Failed to fetch from Close:", error.response?.status, error.response?.data || error.message);
+        res.status(500).send({ error: "Failed to fetch data from Close" });
+    }
+}
+
+export async function getYearlyValueWon() {
+    try {
+        const response = await axios.post(BASE_URL, {
+            relative_range: 'this-year',
+            type: 'overview',
+            metrics: ["opportunities.won.all.sum_annualized_value"]
+        }, getCloseAuth());
+
+        const annualizedValueWon = response.data.aggregations.totals["opportunities.won.all.sum_annualized_value"];
+        return annualizedValueWon;
+
+    } catch (error) {
+        console.error("Failed to fetch from Close:", error.response?.status, error.response?.data || error.message);
+        res.status(500).send({ error: "Failed to fetch data from Close" });
     }
 }

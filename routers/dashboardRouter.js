@@ -3,7 +3,9 @@ import {
   getMetrics,
   getWeeklyCalls,
   getWeeklyContactedLeads,
-  getWeeklyTopCallers
+  getWeeklyTopCallers,
+  getWeeklyValueWon,
+  getYearlyValueWon
 } from '../util/closeService.js';
 
 const router = Router();
@@ -20,17 +22,21 @@ router.get("/api/metrics", async (req, res) => {
 
 router.get("/api/dashboard-data", async (req, res) => {
   try {
-    const [weeklyCalls, weeklyContactedLeads, weeklyTopCallers] = await Promise.all([
+    const [weeklyCalls, weeklyContactedLeads, weeklyTopCallers, weeklyValueWon, yearlyValueWon] = await Promise.all([
       getWeeklyCalls(),
       getWeeklyContactedLeads(),
-      getWeeklyTopCallers()
+      getWeeklyTopCallers(),
+      getWeeklyValueWon(),
+      getYearlyValueWon()
     ]);
 
     res.send({
       data: {
         weeklyCalls,
         weeklyContactedLeads,
-        weeklyTopCallers
+        weeklyTopCallers,
+        weeklyValueWon,
+        yearlyValueWon
       }
     });
   } catch (error) {
