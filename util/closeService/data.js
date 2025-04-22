@@ -64,7 +64,25 @@ async function getWeeklyValueWon(group) {
         metrics: ["opportunities.won.all.sum_annualized_value"],
         users: group
     });
-    return data.aggregations.totals["opportunities.won.all.sum_annualized_value"];
+
+    const perDayFormatted = data.data
+        .map(item => {
+            const date = new Date(item.datetime);
+            const dayOfWeek = new Intl.DateTimeFormat('en-US', { weekday: 'long' }).format(date);
+            const dayIndex = date.getDay();
+            return {
+                day: dayOfWeek,
+                value: item["opportunities.won.all.sum_annualized_value"],
+                dayIndex: dayIndex
+            };
+        })
+        .filter(item => item.dayIndex !== 0 && item.dayIndex !== 6)
+        .map(item => ({ day: item.day, value: item.value }));
+
+    return {
+        total: data.aggregations.totals["opportunities.won.all.sum_annualized_value"],
+        perDay: perDayFormatted
+    };
 }
 
 async function getYearlyValueWon(group) {
