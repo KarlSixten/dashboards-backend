@@ -18,7 +18,7 @@ async function fetchMetric({ relative_range, type = 'overview', metrics, users }
     }
 }
 
-export async function getWeeklyCalls(group) {
+async function getWeeklyCalls(group) {
     const data = await fetchMetric({
         relative_range: 'this-week',
         metrics: ["calls.outbound.all.count"],
@@ -27,7 +27,7 @@ export async function getWeeklyCalls(group) {
     return data.aggregations.totals["calls.outbound.all.count"];
 }
 
-export async function getWeeklyContactedLeads(group) {
+async function getWeeklyContactedLeads(group) {
     const data = await fetchMetric({
         relative_range: 'this-week',
         metrics: ["leads.contacted.all.count"],
@@ -36,7 +36,7 @@ export async function getWeeklyContactedLeads(group) {
     return data.aggregations.totals["leads.contacted.all.count"];
 }
 
-export async function getWeeklyTopCallers(group) {
+async function getWeeklyTopCallers(group) {
     const data = await fetchMetric({
         relative_range: 'this-week',
         type: 'comparison',
@@ -47,7 +47,7 @@ export async function getWeeklyTopCallers(group) {
     return topThreeCallers;
 }
 
-export async function getWeeklyTopEmailers(group) {
+async function getWeeklyTopEmailers(group) {
     const data = await fetchMetric({
         relative_range: 'this-week',
         type: 'comparison',
@@ -58,7 +58,7 @@ export async function getWeeklyTopEmailers(group) {
     return topThreeEmailers;
 }
 
-export async function getWeeklyValueWon(group) {
+async function getWeeklyValueWon(group) {
     const data = await fetchMetric({
         relative_range: 'this-week',
         metrics: ["opportunities.won.all.sum_annualized_value"],
@@ -67,7 +67,7 @@ export async function getWeeklyValueWon(group) {
     return data.aggregations.totals["opportunities.won.all.sum_annualized_value"];
 }
 
-export async function getYearlyValueWon(group) {
+async function getYearlyValueWon(group) {
     const data = await fetchMetric({
         relative_range: 'this-year',
         metrics: ["opportunities.won.all.sum_annualized_value"],
@@ -76,7 +76,7 @@ export async function getYearlyValueWon(group) {
     return data.aggregations.totals["opportunities.won.all.sum_annualized_value"];
 }
 
-export async function getWeeklyEmailsSent(group) {
+async function getWeeklyEmailsSent(group) {
     const data = await fetchMetric({
         relative_range: 'this-week',
         metrics: ["emails.sent.all.count"],
