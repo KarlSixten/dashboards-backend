@@ -1,59 +1,30 @@
 import { Router } from 'express';
-import {
-  getMetrics,
-  getWeeklyCalls,
-  getWeeklyContactedLeads,
-  getWeeklyTopCallers,
-  getWeeklyValueWon,
-  getYearlyValueWon,
-  getWeeklyEmailsSent,
-  getWeeklyTopEmailers
-} from '../util/closeService/data.js';
+import { fetchDashboardData } from '../util/closeService/data.js';
 import { groups } from '../util/closeService/groups.js';
 
 const router = Router();
 
-router.get("/api/metrics", async (req, res) => {
-  try {
-    const metrics = await getMetrics();
-    res.send({ data: metrics });
-  } catch (error) {
-    console.error("Error fetching metrics:", error);
-    res.status(500).send({ error: "Failed to fetch metrics" });
+router.get("/api/dashboard-data/:groupName", async (req, res) => {
+  const { groupName } = req.params;
+  const group = groups.find((group) => group.name.toLowerCase() === groupName);
+
+  if (!group) {
+    return res.status(404).send({ error: `Group "${groupName}" not found` });
   }
-});
 
-router.get("/api/dashboard-data", async (req, res) => {
+  const groupMemberIds = group.members.map((member) => member.user_id);
+
   try {
-    const [weeklyCalls, weeklyContactedLeads, weeklyTopCallers, weeklyValueWon, yearlyValueWon, weeklyEmailsSent, weeklyTopEmailers] = await Promise.all([
-      getWeeklyCalls(),
-      getWeeklyContactedLeads(),
-      getWeeklyTopCallers(),
-      getWeeklyValueWon(),
-      getYearlyValueWon(),
-      getWeeklyEmailsSent(),
-      getWeeklyTopEmailers()
-    ]);
-
-    res.send({
-      data: {
-        weeklyCalls,
-        weeklyContactedLeads,
-        weeklyTopCallers,
-        weeklyValueWon,
-        yearlyValueWon,
-        weeklyEmailsSent,
-        weeklyTopEmailers
-      }
-    });
+    const dashboardData = await fetchDashboardData(groupMemberIds);
+    res.send({ data: dashboardData });
   } catch (error) {
-    console.error("Error fetching dashboard data:", error);
-    res.status(500).send({ error: "Failed to fetch dashboard data" });
+    console.error(`Error fetching dashboard data for group "${groupName}":`, error);
+    res.status(500).send({ error: `Failed to fetch dashboard data for group "${groupName}"` });
   }
 });
 
 router.get("/api/groups", async (req, res) => {
-    res.send(groups);
+  res.send(groups);
 })
 
 export default router;

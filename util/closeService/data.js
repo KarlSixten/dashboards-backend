@@ -3,110 +3,124 @@ import { getCloseAuth } from '../../auth/closeAuth.js';
 
 const BASE_URL = "https://api.close.com/api/v1/report/activity/";
 
-export async function getMetrics() {
-    try {
-        const response = await axios.get(BASE_URL + "metrics/", getCloseAuth());
-        const metrics = response.data;
-        return metrics;
-    } catch (error) {
-        console.error("Failed to fetch calls from Close:", error.response?.status, error.response?.data || error.message);
-        res.status(500).send({ error: "Failed to fetch data from Close" });
-    }
-}
-
-async function fetchMetric({ relative_range, type = 'overview', metrics }) {
+async function fetchMetric({ relative_range, type = 'overview', metrics, users }) {
     try {
         const response = await axios.post(BASE_URL, {
             relative_range,
             type,
-            metrics
+            metrics,
+            users
         }, getCloseAuth());
-
         return response.data;
-
     } catch (error) {
         console.error("Failed to fetch from Close:", error.response?.status, error.response?.data || error.message);
         throw new Error("Failed to fetch data from Close");
     }
 }
 
-export async function getWeeklyCalls() {
+export async function getWeeklyCalls(group) {
     const data = await fetchMetric({
         relative_range: 'this-week',
-        metrics: ["calls.outbound.all.count"]
+        metrics: ["calls.outbound.all.count"],
+        users: group
     });
-
     return data.aggregations.totals["calls.outbound.all.count"];
 }
 
-export async function getWeeklyContactedLeads() {
+export async function getWeeklyContactedLeads(group) {
     const data = await fetchMetric({
         relative_range: 'this-week',
-        metrics: ["leads.contacted.all.count"]
+        metrics: ["leads.contacted.all.count"],
+        users: group
     });
-
     return data.aggregations.totals["leads.contacted.all.count"];
 }
 
-export async function getWeeklyTopCallers() {
+export async function getWeeklyTopCallers(group) {
     const data = await fetchMetric({
         relative_range: 'this-week',
         type: 'comparison',
-        metrics: ["calls.outbound.all.count"]
+        metrics: ["calls.outbound.all.count"],
+        users: group
     });
-
-    const topThreeCallers = data.data
-        .sort((a, b) => b["calls.outbound.all.count"] - a["calls.outbound.all.count"])
-        .slice(0, 3)
-        .map(caller => ({
-            name: data.lookup.user[caller.user_id]?.display || "Unknown",
-            calls: caller["calls.outbound.all.count"]
-        }));
-
+    const topThreeCallers = processTopCallersOrEmailers(data, 'calls.outbound.all.count', 'user');
     return topThreeCallers;
 }
 
-export async function getWeeklyTopEmailers() {
+export async function getWeeklyTopEmailers(group) {
     const data = await fetchMetric({
         relative_range: 'this-week',
         type: 'comparison',
-        metrics: ["emails.sent.all.count"]
+        metrics: ["emails.sent.all.count"],
+        users: group
     });
-
-    const topThreeEmailers = data.data
-        .sort((a, b) => b["emails.sent.all.count"] - a["emails.sent.all.count"])
-        .slice(0, 3)
-        .map(emailer => ({
-            name: data.lookup.user[emailer.user_id]?.display || "Unknown",
-            emails: emailer["emails.sent.all.count"]
-        }));
-
+    const topThreeEmailers = processTopCallersOrEmailers(data, 'emails.sent.all.count', 'user');
     return topThreeEmailers;
 }
 
-export async function getWeeklyValueWon() {
+export async function getWeeklyValueWon(group) {
     const data = await fetchMetric({
         relative_range: 'this-week',
-        metrics: ["opportunities.won.all.sum_annualized_value"]
+        metrics: ["opportunities.won.all.sum_annualized_value"],
+        users: group
     });
-
     return data.aggregations.totals["opportunities.won.all.sum_annualized_value"];
 }
 
-export async function getYearlyValueWon() {
+export async function getYearlyValueWon(group) {
     const data = await fetchMetric({
         relative_range: 'this-year',
-        metrics: ["opportunities.won.all.sum_annualized_value"]
+        metrics: ["opportunities.won.all.sum_annualized_value"],
+        users: group
     });
-
     return data.aggregations.totals["opportunities.won.all.sum_annualized_value"];
 }
 
-export async function getWeeklyEmailsSent() {
+export async function getWeeklyEmailsSent(group) {
     const data = await fetchMetric({
         relative_range: 'this-week',
-        metrics: ["emails.sent.all.count"]
+        metrics: ["emails.sent.all.count"],
+        users: group
     });
-
     return data.aggregations.totals["emails.sent.all.count"];
+}
+
+function processTopCallersOrEmailers(data, metricKey, lookupKey) {
+    return data.data
+        .sort((a, b) => b[metricKey] - a[metricKey])
+        .slice(0, 3)
+        .map(item => ({
+            name: data.lookup[lookupKey][item[`${lookupKey}_id`]]?.display || "Unknown",
+            [metricKey.split('.').pop()]: item[metricKey]
+        }));
+}
+
+export async function fetchDashboardData(userIds) {
+    const [
+        weeklyCalls,
+        weeklyContactedLeads,
+        weeklyTopCallers,
+        weeklyValueWon,
+        yearlyValueWon,
+        weeklyEmailsSent,
+        weeklyTopEmailers
+    ] = await Promise.all([
+        getWeeklyCalls(userIds),
+        getWeeklyContactedLeads(userIds),
+        getWeeklyTopCallers(userIds),
+        getWeeklyValueWon(userIds),
+        getYearlyValueWon(userIds),
+        getWeeklyEmailsSent(userIds),
+        getWeeklyTopEmailers(userIds)
+    ]);
+
+    return {
+        weeklyCalls,
+        weeklyContactedLeads,
+        weeklyTopCallers,
+        weeklyValueWon,
+        yearlyValueWon,
+        weeklyEmailsSent,
+        weeklyTopEmailers
+    };
 }
