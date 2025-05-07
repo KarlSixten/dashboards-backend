@@ -103,6 +103,24 @@ async function getWeeklyEmailsSent(group) {
     return data.aggregations.totals["emails.sent.all.count"];
 }
 
+async function getAverageCallTimeToday(group) {
+    const data = await fetchMetric({
+        relative_range: 'today',
+        metrics: ["calls.all.all.avg_duration"],
+        users: group
+    });
+    return data.aggregations.totals["calls.all.all.avg_duration"];
+}
+
+async function getTotalCallTimeToday(group) {
+    const data = await fetchMetric({
+        relative_range: 'today',
+        metrics: ["calls.all.all.sum_duration"],
+        users: group
+    });
+    return data.aggregations.totals["calls.all.all.sum_duration"];
+}
+
 function processTopCallersOrEmailers(data, metricKey, lookupKey) {
     return data.data
         .sort((a, b) => b[metricKey] - a[metricKey])
@@ -121,7 +139,9 @@ export async function fetchDashboardData(userIds) {
         weeklyValueWon,
         yearlyValueWon,
         weeklyEmailsSent,
-        weeklyTopEmailers
+        weeklyTopEmailers,
+        averageCallTimeToday,
+        totalCallTimeToday
     ] = await Promise.all([
         getWeeklyCalls(userIds),
         getWeeklyContactedLeads(userIds),
@@ -129,7 +149,9 @@ export async function fetchDashboardData(userIds) {
         getWeeklyValueWon(userIds),
         getYearlyValueWon(userIds),
         getWeeklyEmailsSent(userIds),
-        getWeeklyTopEmailers(userIds)
+        getWeeklyTopEmailers(userIds),
+        getAverageCallTimeToday(userIds),
+        getTotalCallTimeToday(userIds)
     ]);
 
     return {
@@ -139,6 +161,8 @@ export async function fetchDashboardData(userIds) {
         weeklyValueWon,
         yearlyValueWon,
         weeklyEmailsSent,
-        weeklyTopEmailers
+        weeklyTopEmailers,
+        averageCallTimeToday,
+        totalCallTimeToday
     };
 }
